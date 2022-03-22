@@ -1,11 +1,13 @@
 from flask import Flask, after_this_request, jsonify, request
+from flask_cors import CORS
 from .services.create_embedding import create_embeddings
 from .services.infox import infox
 import os
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/api/healthz/")
+@app.route("/healthz/")
 def health():
     """Health check for the api"""
 
