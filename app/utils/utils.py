@@ -1,7 +1,8 @@
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 import torch
-from loguru import logger
+import librosa
+import soundfile as sf
 
 device = torch.device('cpu')
 
@@ -26,4 +27,10 @@ def cosine_sim(QA_embeddings, text):
 
     text_emb = load_embedding_model().encode(text)
     return torch.argmax(cos_sim(QA_embeddings, text_emb))
+
+def convert(inputfile):
+    """Converting the sample rate of uploaded audio file"""
+
+    y, sr = librosa.load(inputfile, sr=16000)
+    sf.write(inputfile, y, sr)
 

@@ -2,6 +2,7 @@ from flask import Flask, after_this_request, jsonify, request
 from flask_cors import CORS
 from .services.create_embedding import create_embeddings
 from .services.infox import infox
+from .utils.utils import convert
 import os
 
 app = Flask(__name__)
@@ -29,6 +30,7 @@ def main(qa_name):
     wav_file = request.files.get("audio_file")
     file_path = "app/false_database/wav_file.wav"
     wav_file.save(file_path)
+    convert(file_path)
 
     @after_this_request
     def remove_wavfile(response):
