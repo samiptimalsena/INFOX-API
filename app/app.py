@@ -2,8 +2,13 @@ from flask import Flask, after_this_request, jsonify, request
 from .services.create_embedding import create_embeddings
 from .services.infox import infox
 import os
+from .extensions import mongo
+
 
 app = Flask(__name__)
+app.config['MONGO_URI'] = 'mongodb+srv://HritikThapa7:infoxdb@cluster0.gechm.mongodb.net/infoxdb?retryWrites=true&w=majority'
+mongo.init_app(app)
+
 
 @app.route("/api/healthz/")
 def health():
@@ -14,7 +19,7 @@ def health():
 @app.route("/api/createEmbeddings/", methods=["POST"])
 def create_embedding():
     """Create and save the embeddings for the QA provided"""
-
+    QA_collection = mongo.db.infox    
     QA_NAME = request.json.get('qa_name')
     QA = request.json.get("QA")
     create_embeddings(QA_NAME, QA)
