@@ -38,4 +38,4 @@ def main(qa_name):
         return response
 
     output_text = infox(file_path, qa_name)
-    return output_text
+    return {"output": output_text}
