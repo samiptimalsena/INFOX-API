@@ -6,7 +6,7 @@ from .extensions import mongo
 from loguru import logger
 
 
-UPLOAD_FOLDER = '/home/dmonk/Downloads/III_II Sem/SemProject/INFOX-API/app/false_database/'
+UPLOAD_FOLDER = 'path/to/uploads'
 app = Flask(__name__)
 app.config['MONGO_URI'] = 'mongodb+srv://<db_username>:<password_to_username>@cluster0.gechm.mongodb.net/<db_name>?retryWrites=true&w=majority'
 mongo.init_app(app)
