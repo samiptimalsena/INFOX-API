@@ -6,7 +6,6 @@ from typing import Dict
 from loguru import logger
 import os
 from app.extensions import mongo
-import numpy
 
 def create_embeddings(QA_NAME:str, QA: Dict):
     """
@@ -34,6 +33,4 @@ def create_embeddings(QA_NAME:str, QA: Dict):
     #     np.save(qa_npy_file, QA_embeddings)
     # logger.info("Embeddings saved")
     QA_collection.insert_one({'Name' : QA_NAME, 'QAs' : QA, 'QA_embeddings' : QA_embeddings_list})
-    arr = numpy.array(QA_embeddings_list, numpy.float32)
-    print(arr)
     logger.info("Embeddings saved in database")
