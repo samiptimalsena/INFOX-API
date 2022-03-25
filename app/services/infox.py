@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import numpy as np
 import json
 from .speech2text import speech2text
@@ -20,24 +21,21 @@ def infox(wav_filepath: str, qa_name: str) -> str:
     transcribed_text = speech2text(wav_filepath)
     logger.info(f"Transcribed text: {transcribed_text}")
 
-    file_path = 'app/false_database/QA_'
-    with open(file_path+qa_name+'.json') as QA_json:
-        QA = json.load(QA_json)
-
     #Initialise the database
     QA_collection = mongo.db.infox 
 
     #retrieve from database
-    # Check the code for this once
+    data = QA_collection.find_one({'Name' : qa_name})
+    QA = data['QAs']
+    logger.info(QA)
+    QA_EMBEDDINGS = data['QA_embeddings']
 
     #Converting nested list retrieved from database to numpy array
-    # arr = np.array(QA_embeddings_list, np.float32)
+    QA_EMBEDDINGS_NP = np.array(QA_EMBEDDINGS, np.float32)
  
 
-    QA_EMBEDDINGS = np.load(file_path+qa_name+'.npy')
-    QA_EMBEDDINGS_LIST = QA_collection.find_one({'QA_embeddings':qa_name})
     QUESTIONS = [key for key, value in QA.items()]
-    idx = cosine_sim(QA_EMBEDDINGS, transcribed_text)
+    idx = cosine_sim(QA_EMBEDDINGS_NP, transcribed_text)
 
     question = QUESTIONS[idx]
     logger.info(f"The most matched question is: {question}")
