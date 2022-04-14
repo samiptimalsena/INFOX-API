@@ -1,8 +1,10 @@
+from flask import request
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 import torch
 import librosa
 import soundfile as sf
+from functools import wraps
 
 device = torch.device('cpu')
 
@@ -34,3 +36,25 @@ def convert(inputfile):
     y, sr = librosa.load(inputfile, sr=16000)
     sf.write(inputfile, y, sr)
 
+
+#decorator for token authorization
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message':'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = mongo.db.users.find_one({'username': data['username']})
+        except:
+            return jsonify({'message': 'Token is invalid'}), 401
+
+        return f(current_user, *args, **kwargs)
+    
+    return decorated

@@ -7,7 +7,7 @@ import os
 from .services.db import mongo
 from .services.create_embedding import create_embeddings
 from .services.infox import infox
-from .utils.utils import convert
+from .utils.utils import convert, token_required
 from .config import Config
 
 app = Flask(__name__)
@@ -21,17 +21,17 @@ mongo.init_app(app)
 def register():
     """Register a user"""
 
-    first_name = request.json.get("firstname")
+    first_name = request.json.get('firstname')
     last_name = request.json.get('lastname')
     username = request.json.get('username')
     email = request.json.get('email')
-    password = bcrypt.generate_password_hash(request.json.get('password'))
+    password = request.json.get('password')
 
     user_in_db = mongo.db.users.find_one({'username': username}) or mongo.db.users.find_one({'email': email})
     if user_in_db:
         return jsonify({"message": "User with provided username/email already exists, please try with another one."})
 
-    mongo.db.users.insert_one({'first_name': first_name, 'last_name': last_name, 'username': username, 'password': password})
+    mongo.db.users.insert_one({'first_name': first_name, 'last_name': last_name, 'username': username, 'email': email, 'password': password})
     return jsonify({"message": "User created"})
 
 
@@ -41,28 +41,74 @@ def login():
 
     username = request.json.get('username')
     user_in_db = mongo.db.users.find_one({'username': username})
+    logger.info(user_in_db['password'])
 
     if not user_in_db:
-        return jsonify({"message": "No user with that username exists"})
+        return make_response('No user with this username', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-    if bcrypt.check_password_hash(user_in_db['password'], request.json.get("password")):
-        return jsonify({"Authentication": True})
+    if user_in_db['password'] == request.json.get("password"):
+        token = jwt.encode({'username' : user_in_db['username'], 'email' : user_in_db['email']}, app.config['SECRET_KEY'])
+        return jsonify({"Token": token.decode('UTF-8')})
+
     else:
-        return jsonify({"message": "username and password didn't match"})  
+        return make_response('Could not verify!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
+@app.route("/api/getUser/", methods=["GET"])
+@token_required
+def get_user(current_user):
+    """Get all the embeddings for the QA provided"""
+
+    data = mongo.db.users.find({"username": current_user['username']})
+    list_data = list(data)
+    json_data = dumps(list_data)
+    return jsonify({"User Details": json_data})     
 
 @app.route("/api/createEmbeddings/", methods=["POST"])
+@token_required
 def create_embedding():
     """Create and save the embeddings for the QA provided"""
 
-    username = request.json.get("username")
+    username = current_user['username']
+    # username = request.json.get('username')
     QA_NAME = request.json.get('qa_name')
     QA = request.json.get("QA")
-    create_embeddings(username, QA_NAME, QA)
+    TITLE = request.json.get("title")
+    DESCRIPTION = request.json.get("description")
+    IMAGE = request.json.get("image")
+
+    create_embeddings(username, QA_NAME, QA, TITLE, DESCRIPTION, IMAGE)
     return jsonify({"message": "Embeddings created successfully"})
     
-@app.route("/api/app/<string:username>/<string:qa_name>/", methods=['POST'])
-def main(username, qa_name):
+
+@app.route("/api/getEmbeddings/<string:qa_name>/", methods=["GET"])
+@token_required
+def get_embedding(current_user, qa_name):
+    """Get all the embeddings for the QA provided"""
+
+    data = mongo.db.embeddings.find({"username": current_user['username'], "QA_NAME": qa_name})
+    list_data = list(data)
+    json_data = dumps(list_data)
+    return jsonify({"Embedding data": json_data})
+
+@app.route("/api/getQAs/", methods=["GET"])
+@token_required
+def get_all_questions(current_user):
+    """Get all the embeddings for the users"""
+
+    data = mongo.db.embeddings.find({"username": current_user['username']})
+    list_data = list(data)
+    json_data = dumps(list_data)
+    return jsonify({"Questions": json_data})
+
+@app.route("/api/app/get_all/")
+def get_all():
+    data = mongo.db.embeddings.find()
+    list_data = list(data)
+    json_data = dumps(list_data)
+    return jsonify(json_data)
+
+@app.route("/api/app/<string:qa_name>/", methods=['POST'])
+def main(qa_name):
     """End2End infox application"""
     
     wav_file = request.files.get("audio_file")
@@ -75,7 +121,7 @@ def main(username, qa_name):
         os.remove(file_path)
         return response
 
-    output_text = infox(file_path, username,  qa_name)
+    output_text = infox(file_path, qa_name)
     return {"output": output_text}
     
 
