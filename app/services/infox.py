@@ -30,4 +30,3 @@ def infox( wav_filepath: str, qa_name: str) -> str:
     logger.info(f"The most matched question is: {question}")
     text = QA[question]
     return text
-

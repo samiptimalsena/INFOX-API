@@ -1,6 +1,10 @@
 from flask import Flask, after_this_request, jsonify, request
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
+from bson import json_util
+import json
+import jwt
+from loguru import logger
 
 import os
 
@@ -60,12 +64,12 @@ def get_user(current_user):
 
     data = mongo.db.users.find({"username": current_user['username']})
     list_data = list(data)
-    json_data = dumps(list_data)
-    return jsonify({"User Details": json_data})     
+    json_data = json_util.dumps(list_data)
+    return jsonify({"User Details": json_data})
 
 @app.route("/api/createEmbeddings/", methods=["POST"])
 @token_required
-def create_embedding():
+def create_embedding(current_user):
     """Create and save the embeddings for the QA provided"""
 
     username = current_user['username']
@@ -78,7 +82,7 @@ def create_embedding():
 
     create_embeddings(username, QA_NAME, QA, TITLE, DESCRIPTION, IMAGE)
     return jsonify({"message": "Embeddings created successfully"})
-    
+
 
 @app.route("/api/getEmbeddings/<string:qa_name>/", methods=["GET"])
 @token_required
@@ -87,7 +91,7 @@ def get_embedding(current_user, qa_name):
 
     data = mongo.db.embeddings.find({"username": current_user['username'], "QA_NAME": qa_name})
     list_data = list(data)
-    json_data = dumps(list_data)
+    json_data = json_util.dumps(list_data)
     return jsonify({"Embedding data": json_data})
 
 @app.route("/api/getQAs/", methods=["GET"])
@@ -97,20 +101,20 @@ def get_all_questions(current_user):
 
     data = mongo.db.embeddings.find({"username": current_user['username']})
     list_data = list(data)
-    json_data = dumps(list_data)
+    json_data = json_util.dumps(list_data)
     return jsonify({"Questions": json_data})
 
 @app.route("/api/app/get_all/")
 def get_all():
     data = mongo.db.embeddings.find()
     list_data = list(data)
-    json_data = dumps(list_data)
+    json_data = json_util.dumps(list_data)
     return jsonify(json_data)
 
 @app.route("/api/app/<string:qa_name>/", methods=['POST'])
 def main(qa_name):
     """End2End infox application"""
-    
+
     wav_file = request.files.get("audio_file")
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'wav_file.wav')
     wav_file.save(file_path)
@@ -123,7 +127,7 @@ def main(qa_name):
 
     output_text = infox(file_path, qa_name)
     return {"output": output_text}
-    
+
 
 @app.route("/healthz/")
 def health():
