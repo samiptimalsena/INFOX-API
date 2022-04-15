@@ -22,7 +22,8 @@ def create_embeddings(username:str, QA_NAME:str, QA: Dict, TITLE:str, DESCRIPTIO
     logger.info("Embedding model loaded")
 
     QUESTIONS = [key for key, value in QA.items()]
-    QA_embeddings = list(np.array(embedding_model.encode(QUESTIONS)))
+    QA_embeddings = embedding_model.encode(QUESTIONS).tolist()
+    
     logger.info("Embeddings created")
 
     mongo.db.embeddings.insert_one({"username": username,

@@ -20,7 +20,6 @@ bcrypt = Bcrypt(app)
 CORS(app)
 mongo.init_app(app)
 
-
 @app.route("/api/register/", methods=['POST'])
 def register():
     """Register a user"""
@@ -73,12 +72,11 @@ def create_embedding(current_user):
     """Create and save the embeddings for the QA provided"""
 
     username = current_user['username']
-    # username = request.json.get('username')
     QA_NAME = request.json.get('qa_name')
     QA = request.json.get("QA")
     TITLE = request.json.get("title")
     DESCRIPTION = request.json.get("description")
-    IMAGE = request.json.get("image")
+    IMAGE = request.json.get("image")   
 
     create_embeddings(username, QA_NAME, QA, TITLE, DESCRIPTION, IMAGE)
     return jsonify({"message": "Embeddings created successfully"})
