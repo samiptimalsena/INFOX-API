@@ -1,14 +1,13 @@
 FROM python:3.8.13-buster
 
-RUN apt update
-RUN apt-get install libsndfile1 -y
+RUN apt-get update -y && apt-get install -y --no-install-recommends build-essential gcc libsndfile1 
 
-WORKDIR /app
-COPY ./requirements.txt /app/requirements.txt
+WORKDIR /INFOX
+COPY ./requirements.txt ./requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-COPY . /app
+COPY . .
 
 ENV FLASK_APP=app/app.py
 ENV UPLOAD_FOLDER=app/UPLOADS

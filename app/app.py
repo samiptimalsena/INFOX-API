@@ -1,4 +1,4 @@
-from flask import Flask, after_this_request, jsonify, request
+from flask import Flask, after_this_request, jsonify, request, make_response
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from bson import json_util
@@ -81,6 +81,16 @@ def create_embedding(current_user):
     create_embeddings(username, QA_NAME, QA, TITLE, DESCRIPTION, IMAGE)
     return jsonify({"message": "Embeddings created successfully"})
 
+@app.route("/api/createEmbeddings/<string:qa_name>", methods=["POST"])
+@token_required
+def delete_embedding(current_user, qa_name):
+    """Deleting the embedding for chatbot"""
+
+    embedding = mongo.db.embeddings.find({"username": current_user["username"], "QA_NAME": qa_name})
+    mongo.db.embedding.delete_one({"username": current_user["username"], "QA_NAME": qa_name})
+    return {"message": "Chatbot successfully deleted"}
+
+
 
 @app.route("/api/getEmbeddings/<string:qa_name>/", methods=["GET"])
 @token_required
@@ -103,8 +113,9 @@ def get_all_questions(current_user):
     return jsonify({"Questions": json_data})
 
 @app.route("/api/app/get_all/")
-def get_all():
-    data = mongo.db.embeddings.find()
+@token_required
+def get_all(current_user):
+    data = mongo.db.embeddings.find({"username": current_user['username']})
     list_data = list(data)
     json_data = json_util.dumps(list_data)
     return jsonify(json_data)
