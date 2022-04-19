@@ -81,7 +81,7 @@ def create_embedding(current_user):
     create_embeddings(username, QA_NAME, QA, TITLE, DESCRIPTION, IMAGE)
     return jsonify({"message": "Embeddings created successfully"})
 
-@app.route("/api/createEmbeddings/<string:qa_name>", methods=["POST"])
+@app.route("/api/deleteEmbeddings/<string:qa_name>", methods=["POST"])
 @token_required
 def delete_embedding(current_user, qa_name):
     """Deleting the embedding for chatbot"""
