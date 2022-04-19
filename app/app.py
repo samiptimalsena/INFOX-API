@@ -85,9 +85,9 @@ def create_embedding(current_user):
 @token_required
 def delete_embedding(current_user, qa_name):
     """Deleting the embedding for chatbot"""
-
+    logger.info(qa_name)
     embedding = mongo.db.embeddings.find({"username": current_user["username"], "QA_NAME": qa_name})
-    mongo.db.embedding.delete_one({"username": current_user["username"], "QA_NAME": qa_name})
+    mongo.db.embeddings.delete_one({"username": current_user["username"], "QA_NAME": qa_name})
     return {"message": "Chatbot successfully deleted"}
 
 
@@ -119,6 +119,14 @@ def get_all(current_user):
     list_data = list(data)
     json_data = json_util.dumps(list_data)
     return jsonify(json_data)
+
+@app.route("/api/app/usermode/<string:username>")
+def get_all_usermode(username):
+    data = mongo.db.embeddings.find({"username": username})
+    list_data = list(data)
+    json_data = json_util.dumps(list_data)
+    return jsonify(json_data)
+
 
 @app.route("/api/app/<string:qa_name>/", methods=['POST'])
 def main(qa_name):
